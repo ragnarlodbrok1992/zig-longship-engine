@@ -1,14 +1,18 @@
 const std = @import("std");
 const SDL = @import("sdl2"); // Add this package by using sdl.getNativePackage
 
-const TITLE_BAR = "Longship Engine - pre-alpha version:";
+const TITLE_BAR = "Longship Engine - pre-alpha version";
 const VERSION = 0;
 
 const RES_WIDTH = 800;
 const RES_HEIGHT = 600;
 
+const SDL_SCANCODE_ESCAPE: c_int = 41;
+
+pub fn mouseClick() void {}
+
 pub fn main() !void {
-    std.debug.print("{s} {d}\n", .{ TITLE_BAR, VERSION });
+    std.debug.print("{s}: {}\n", .{ TITLE_BAR, VERSION });
 
     // SDL enabling code
     if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_EVENTS | SDL.SDL_INIT_AUDIO) < 0)
@@ -33,6 +37,16 @@ pub fn main() !void {
         while (SDL.SDL_PollEvent(&ev) != 0) {
             switch (ev.type) {
                 SDL.SDL_QUIT => break :mainLoop,
+                SDL.SDL_KEYDOWN => {
+                    if (ev.key.keysym.scancode == SDL_SCANCODE_ESCAPE) break :mainLoop;
+                },
+                SDL.SDL_KEYUP => {},
+                SDL.SDL_MOUSEBUTTONDOWN => {
+                    var mouse_x: c_int = undefined;
+                    var mouse_y: c_int = undefined;
+                    var mouse_state_output: u32 = SDL.SDL_GetMouseState(&mouse_x, &mouse_y);
+                    std.debug.print("Mouse clicked - state: {}, mouse_x: {}, mouse_y: {}\n", .{ mouse_state_output, mouse_x, mouse_y });
+                },
                 else => {},
             }
         }
