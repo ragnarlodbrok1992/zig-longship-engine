@@ -11,6 +11,14 @@ pub fn build(b: *std.build.Builder) void {
     exe.setBuildMode(mode);
     sdk.link(exe, .dynamic);
     exe.addPackage(sdk.getNativePackage("sdl2"));
+
+    // This might not work?!
+    // exe.addPackage(sdk.getNativePackage("sdl2-image"));
+    // exe.addPackage(sdk.getNativePackage("sdl2-ttf"));
+
+    // exe.linkSystemLibrary("sdl2_image");
+    // exe.linkSystemLibrary("sdl2_ttf");
+
     exe.install();
 
     const run_cmd = exe.run();
