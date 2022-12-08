@@ -1,6 +1,5 @@
 const std = @import("std");
 const SDL = @import("sdl2"); // Add this package by using sdl.getNativePackage
-// const ttf = @import("ttf");
 
 const TITLE_BAR = "Longship Engine - pre-alpha version";
 const VERSION = 0;
@@ -50,9 +49,9 @@ pub fn main() !void {
     defer SDL.SDL_Quit();
 
     // SDL TTF enabling code
-    // if (SDL.ttf.init() < 0)
-    //     sdlPanic();
-    // defer SDL.ttf.quit();
+    if (SDL.TTF_Init() < 0)
+        sdlPanic();
+    defer SDL.TTF_Quit();
 
     // DEBUG lines to render
     const test_line = Line.init(100, 100, 200, 200);
