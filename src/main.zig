@@ -31,14 +31,65 @@ const Line = struct {
             .b = Point.init(bx, by),
         };
     }
+
+    pub fn init_points(a: Point, b: Point) Line {
+        return Line{
+            .a = a,
+            .b = b,
+        };
+    }
 };
 
-pub fn mouseClick() void {}
+const IsoTile = struct {
+    nw: Point,
+    ne: Point,
+    sw: Point,
+    se: Point,
 
-pub fn renderLine(renderer: *SDL.SDL_Renderer, line: Line, color: SDL.SDL_Color) void {
+    line_w: Line,
+    line_n: Line,
+    line_e: Line,
+    line_s: Line,
+
+    color: SDL.SDL_Color,
+
+    pub fn init(n: i32, w: i32, s: i32, e: i32, color: SDL.SDL_Color) IsoTile {
+        const nw_point = Point.init(n + 1, w + 1);
+        const ne_point = Point.init(n + 1, e - 1);
+        const sw_point = Point.init(s - 1, w + 1);
+        const se_point = Point.init(s - 1, e - 1);
+
+        return IsoTile{
+            .nw = nw_point,
+            .ne = ne_point,
+            .sw = sw_point,
+            .se = se_point,
+
+            .line_w = Line.init_points(sw_point, nw_point),
+            .line_n = Line.init_points(nw_point, ne_point),
+            .line_e = Line.init_points(ne_point, se_point),
+            .line_s = Line.init_points(se_point, sw_point),
+
+            .color = color,
+        };
+    }
+};
+
+const iso_tiles_test = [10][10]IsoTile{};
+
+pub fn render_line(renderer: *SDL.SDL_Renderer, line: Line, color: SDL.SDL_Color) void {
     _ = SDL.SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     _ = SDL.SDL_RenderDrawLine(renderer, line.a.x, line.a.y, line.b.x, line.b.y);
 }
+
+pub fn render_iso_tile(renderer: *SDL.SDL_Renderer, iso_tile: IsoTile) void {
+    render_line(renderer, iso_tile.line_w, iso_tile.color);
+    render_line(renderer, iso_tile.line_n, iso_tile.color);
+    render_line(renderer, iso_tile.line_e, iso_tile.color);
+    render_line(renderer, iso_tile.line_s, iso_tile.color);
+}
+
+pub fn mouseClick() void {}
 
 pub fn main() !void {
     std.debug.print("{s}: {}\n", .{ TITLE_BAR, VERSION });
@@ -54,8 +105,9 @@ pub fn main() !void {
     defer SDL.TTF_Quit();
 
     // DEBUG lines to render
-    const test_line = Line.init(100, 100, 200, 200);
-    const test_color = SDL.SDL_Color{ .r = 255, .g = 255, .b = 0, .a = 0 };
+    // const test_line = Line.init(100, 100, 200, 200);
+    // const test_color = SDL.SDL_Color{ .r = 255, .g = 255, .b = 0, .a = 0 };
+    const test_iso_tile = IsoTile.init(100, 100, 200, 200, SDL.SDL_Color{ .r = 255, .g = 127, .b = 20, .a = 0 });
 
     var main_window = SDL.SDL_CreateWindow(
         TITLE_BAR,
@@ -99,7 +151,10 @@ pub fn main() !void {
         _ = SDL.SDL_RenderClear(main_renderer);
 
         // Render lines
-        renderLine(main_renderer, test_line, test_color);
+        // renderLine(main_renderer, test_line, test_color);
+
+        // Render isotile
+        render_iso_tile(main_renderer, test_iso_tile);
 
         SDL.SDL_RenderPresent(main_renderer);
     }
