@@ -7,6 +7,30 @@ const VERSION = 0;
 const RES_WIDTH = 800;
 const RES_HEIGHT = 600;
 
+const TILE_CAR_WIDTH = 40;
+const TILE_CAR_HEIGHT = 40;
+const TILES_NORTH = 50;
+const TILES_WEST = 50;
+const TILES_COLUMNS = 10;
+const TILES_ROWS = 10;
+
+const BLACK = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0x00, .a = 0xFF };
+const WHITE = SDL.SDL_Color{ .r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xFF };
+const RED = SDL.SDL_Color{ .r = 0xFF, .g = 0x00, .b = 0x00, .a = 0xFF };
+const LIME = SDL.SDL_Color{ .r = 0x00, .g = 0xFF, .b = 0x00, .a = 0xFF };
+const BLUE = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0xFF, .a = 0xFF };
+const YELLOW = SDL.SDL_Color{ .r = 0xFF, .g = 0xFF, .b = 0x00, .a = 0xFF };
+const CYAN = SDL.SDL_Color{ .r = 0x00, .g = 0xFF, .b = 0xFF, .a = 0xFF };
+const MAGENTA = SDL.SDL_Color{ .r = 0xFF, .g = 0x00, .b = 0xFF, .a = 0xFF };
+const SILVER = SDL.SDL_Color{ .r = 0xC0, .g = 0xC0, .b = 0xC0, .a = 0xFF };
+const GRAY = SDL.SDL_Color{ .r = 0x80, .g = 0x80, .b = 0x80, .a = 0xFF };
+const MAROON = SDL.SDL_Color{ .r = 0x80, .g = 0x00, .b = 0x00, .a = 0xFF };
+const OLIVE = SDL.SDL_Color{ .r = 0x80, .g = 0x80, .b = 0x00, .a = 0xFF };
+const GREEN = SDL.SDL_Color{ .r = 0x00, .g = 0x80, .b = 0x00, .a = 0xFF };
+const PURPLE = SDL.SDL_Color{ .r = 0x80, .g = 0x00, .b = 0x80, .a = 0xFF };
+const TEAL = SDL.SDL_Color{ .r = 0x00, .g = 0x80, .b = 0x80, .a = 0xFF };
+const NAVY = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0x80, .a = 0xFF };
+
 const SDL_SCANCODE_ESCAPE: c_int = 41;
 
 const Point = struct {
@@ -73,9 +97,41 @@ const IsoTile = struct {
             .color = color,
         };
     }
+
+    pub fn init_with_sizes(n: i32, w: i32, width: i32, height: i32, color: SDL.SDL_Color) IsoTile {
+        const nw_point = Point.init(n + 1, w + 1);
+        const ne_point = Point.init(n + 1, w + width - 1);
+        const sw_point = Point.init(n + height - 1, w + 1);
+        const se_point = Point.init(n + height - 1, w + width - 1);
+
+        return IsoTile{
+            .nw = nw_point,
+            .ne = ne_point,
+            .sw = sw_point,
+            .se = se_point,
+
+            .line_w = Line.init_points(sw_point, nw_point),
+            .line_n = Line.init_points(nw_point, ne_point),
+            .line_e = Line.init_points(ne_point, se_point),
+            .line_s = Line.init_points(se_point, sw_point),
+
+            .color = color,
+        };
+    }
 };
 
-const iso_tiles_test = [10][10]IsoTile{};
+// var iso_tiles_matrix = init: {
+//     var initial_values: [10][10]IsoTile = undefined;
+//     // Creating iso tile matrix
+//     for (initial_values) |row, row_index| {
+//         for (row) |*iso_tile, column_index| {
+//             iso_tile = IsoTile.init_with_sizes(TILES_NORTH * row_index, TILES_WEST * column_index, TILE_CAR_WIDTH, TILE_CAR_HEIGHT, MAROON);
+//        }
+//     }
+//    break :init initial_values;
+// };
+
+// const iso_tiles_matrix = [10][10]IsoTile;
 
 pub fn render_line(renderer: *SDL.SDL_Renderer, line: Line, color: SDL.SDL_Color) void {
     _ = SDL.SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -87,6 +143,10 @@ pub fn render_iso_tile(renderer: *SDL.SDL_Renderer, iso_tile: IsoTile) void {
     render_line(renderer, iso_tile.line_n, iso_tile.color);
     render_line(renderer, iso_tile.line_e, iso_tile.color);
     render_line(renderer, iso_tile.line_s, iso_tile.color);
+}
+
+pub fn set_render_draw_color(renderer: *SDL.SDL_Renderer, color: SDL.SDL_Color) c_int {
+    return SDL.SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
 pub fn mouseClick() void {}
@@ -107,7 +167,17 @@ pub fn main() !void {
     // DEBUG lines to render
     // const test_line = Line.init(100, 100, 200, 200);
     // const test_color = SDL.SDL_Color{ .r = 255, .g = 255, .b = 0, .a = 0 };
-    const test_iso_tile = IsoTile.init(100, 100, 200, 200, SDL.SDL_Color{ .r = 255, .g = 127, .b = 20, .a = 0 });
+    // const test_iso_tile = IsoTile.init(100, 100, 200, 200, SDL.SDL_Color{ .r = 255, .g = 127, .b = 20, .a = 0 });
+    // const test_iso_tile = IsoTile.init_with_sizes(100, 100, TILE_CAR_WIDTH, TILE_CAR_HEIGHT, SDL.SDL_Color{ .r = 255, .g = 127, .b = 20, .a = 0 });
+    var iso_tiles_matrix: [10][10]IsoTile = undefined;
+    var row: usize = 0;
+
+    while (row < TILES_ROWS) : (row += 1) {
+        var column: usize = 0;
+        while (column < TILES_COLUMNS) : (column += 1) {
+            iso_tiles_matrix[column][row] = IsoTile.init_with_sizes(TILES_NORTH + TILE_CAR_HEIGHT * @intCast(i32, row + 1), TILES_WEST + TILE_CAR_WIDTH * @intCast(i32, column + 1), TILE_CAR_WIDTH, TILE_CAR_HEIGHT, MAROON);
+        }
+    }
 
     var main_window = SDL.SDL_CreateWindow(
         TITLE_BAR,
@@ -147,14 +217,15 @@ pub fn main() !void {
         }
 
         // Render clear screen
-        _ = SDL.SDL_SetRenderDrawColor(main_renderer, 0xF7, 0xA4, 0x1D, 0xFF);
+        _ = set_render_draw_color(main_renderer, BLACK);
         _ = SDL.SDL_RenderClear(main_renderer);
 
-        // Render lines
-        // renderLine(main_renderer, test_line, test_color);
-
         // Render isotile
-        render_iso_tile(main_renderer, test_iso_tile);
+        for (iso_tiles_matrix) |iso_tile_row| {
+            for (iso_tile_row) |iso_tile| {
+                render_iso_tile(main_renderer, iso_tile);
+            }
+        }
 
         SDL.SDL_RenderPresent(main_renderer);
     }
