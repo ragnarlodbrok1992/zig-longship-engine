@@ -185,7 +185,7 @@ pub fn main() !void {
     ) orelse sdlPanic();
     defer _ = SDL.SDL_DestroyWindow(main_window);
 
-    var main_renderer = SDL.SDL_CreateRenderer(main_window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
+    var main_renderer = SDL.SDL_CreateRenderer(main_window, -1, SDL.SDL_RENDERER_ACCELERATED | SDL.SDL_RENDERER_PRESENTVSYNC) orelse sdlPanic();
     defer _ = SDL.SDL_DestroyRenderer(main_renderer);
 
     // Create camera
@@ -198,6 +198,9 @@ pub fn main() !void {
     _ = SDL.SDL_GetMouseState(&prevFrameMouseX, &prevFrameMouseY);
 
     mainLoop: while (true) {
+        // Beggining of a frame
+        var ticks_start_of_frame: u64 = SDL.SDL_GetTicks64();
+
         var ev: SDL.SDL_Event = undefined;
         while (SDL.SDL_PollEvent(&ev) != 0) {
             switch (ev.type) {
@@ -272,6 +275,18 @@ pub fn main() !void {
         }
 
         SDL.SDL_RenderPresent(main_renderer);
+
+        // End of a frame
+        var ticks_end_of_frame: u64 = SDL.SDL_GetTicks64();
+        var ticks_diff: u64 = ticks_end_of_frame - ticks_start_of_frame;
+        var ticks_diff_div_1000: f64 = @intToFloat(f64, ticks_diff);
+        var FPS: u64 = @floatToInt(u64, 1 / (ticks_diff_div_1000 / 1000));
+
+        // std.debug.print("Ticks of frame: {}\n", .{ticks_diff});
+        std.debug.print("FPS: {}\n", .{FPS});
+        // @Fix: TODO this should be done better
+        const title_bar_by_frame = TITLE_BAR ++ " "; // ++ @intToPtr(u64, FPS);
+        SDL.SDL_SetWindowTitle(main_window, title_bar_by_frame);
     }
 }
 
