@@ -148,6 +148,7 @@ pub fn main() !void {
     // Engine variables for controls
     var mouseDraggingEnabled = false;
     var mouseHasDragged = false;
+    var getFirstMouseClickEvent = false;
     var prevFrameMouseX: c_int = undefined;
     var prevFrameMouseY: c_int = undefined;
     var currFrameMouseX: c_int = undefined;
@@ -189,6 +190,12 @@ pub fn main() !void {
 
     // Create camera
     var camera = Camera{ .offset_x = 0, .offset_y = 0 };
+    var old_camera_x: i32 = 0;
+    var old_camera_y: i32 = 0;
+
+    // Define mouse state values before loop
+    _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
+    _ = SDL.SDL_GetMouseState(&prevFrameMouseX, &prevFrameMouseY);
 
     mainLoop: while (true) {
         var ev: SDL.SDL_Event = undefined;
@@ -220,32 +227,37 @@ pub fn main() !void {
                     // TODO ragnar: this event is only when mouse is moving
                     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
                     mouseHasDragged = true;
-                    std.debug.print("CurrFrameMouseX: {}, CurrFrameMouseY: {}\n", .{ currFrameMouseX, currFrameMouseY });
                 },
                 SDL.SDL_MOUSEBUTTONDOWN => {
-                    // var mouse_x: c_int = undefined;
-                    // var mouse_y: c_int = undefined;
-                    // var mouse_state_output: u32 = SDL.SDL_GetMouseState(&mouse_x, &mouse_y);
-                    // std.debug.print("Mouse clicked - state: {}, mouse_x: {}, mouse_y: {}\n", .{ mouse_state_output, mouse_x, mouse_y });
                     mouseDraggingEnabled = true;
+                    getFirstMouseClickEvent = true;
                 },
                 SDL.SDL_MOUSEBUTTONUP => {
                     mouseDraggingEnabled = false;
                 },
-                else => {},
+                else => {
+                    mouseHasDragged = false;
+                },
             }
         }
 
         // After getting events - use engine controls
-        if (mouseDraggingEnabled) {
-            // Since currFrameMouse changes only when moving cursor TODO ragnar
-            // think how to facilitate this event
-            // mouseDraggingEnabled is when we have mouse button down
+        // Mouse dragging
+        if (getFirstMouseClickEvent) {
             prevFrameMouseX = currFrameMouseX;
             prevFrameMouseY = currFrameMouseY;
 
-            // std.debug.print("Dragging with your mouse: mouse in x has moved {}, in y has moved {}\n", .{
-            // std.debug.print("Dragging with your mouse!\n", .{});
+            old_camera_x = camera.offset_x;
+            old_camera_y = camera.offset_y;
+
+            getFirstMouseClickEvent = false;
+        }
+        if (mouseDraggingEnabled and mouseHasDragged) {
+            var mouse_x_diff = old_camera_x + prevFrameMouseX - currFrameMouseX;
+            var mouse_y_diff = old_camera_y + prevFrameMouseY - currFrameMouseY;
+
+            camera.offset_x = mouse_x_diff;
+            camera.offset_y = mouse_y_diff;
         }
 
         // Render clear screen
