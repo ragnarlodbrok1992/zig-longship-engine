@@ -31,6 +31,9 @@ const PURPLE = SDL.SDL_Color{ .r = 0x80, .g = 0x00, .b = 0x80, .a = 0xFF };
 const TEAL = SDL.SDL_Color{ .r = 0x00, .g = 0x80, .b = 0x80, .a = 0xFF };
 const NAVY = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0x80, .a = 0xFF };
 
+// Utility functions
+pub fn u64ToString() []u8 {}
+
 const Camera = struct {
     offset_x: i32,
     offset_y: i32,
@@ -285,6 +288,8 @@ pub fn main() !void {
         // std.debug.print("Ticks of frame: {}\n", .{ticks_diff});
         std.debug.print("FPS: {}\n", .{FPS});
         // @Fix: TODO this should be done better
+        var gowno = @intToPtr(u64, FPS);
+        std.debug.print("{}\n", .{gowno});
         const title_bar_by_frame = TITLE_BAR ++ " "; // ++ @intToPtr(u64, FPS);
         SDL.SDL_SetWindowTitle(main_window, title_bar_by_frame);
     }
