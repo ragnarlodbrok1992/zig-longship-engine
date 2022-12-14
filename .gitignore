@@ -3,4 +3,5 @@ zig-out/
 libs/
 tasks/
 .build_config/
+*.rdbg
 
