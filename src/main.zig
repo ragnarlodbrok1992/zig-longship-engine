@@ -31,8 +31,31 @@ const PURPLE = SDL.SDL_Color{ .r = 0x80, .g = 0x00, .b = 0x80, .a = 0xFF };
 const TEAL = SDL.SDL_Color{ .r = 0x00, .g = 0x80, .b = 0x80, .a = 0xFF };
 const NAVY = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0x80, .a = 0xFF };
 
+const START_OF_ASCII_NUM = 48;
+
 // Utility functions
-pub fn u64ToString() []u8 {}
+pub fn u64ToString(value: u64) []u8 {
+    var temp_value = value;
+
+    // Test
+    var MAX_INDEX: u32 = @floatToInt(u32, @log10(@intToFloat(f32, value))) + 1;
+    // std.debug.print("MAX INDEX: {}\n", .{MAX_INDEX});
+
+    var output = [_]u8{0} ** 16;
+    var index: u32 = MAX_INDEX - 1;
+    while (temp_value != 0) {
+        // std.debug.panic("Before modulo division\n", .{});
+        var rest = temp_value % 10;
+        temp_value /= 10;
+        output[index] = START_OF_ASCII_NUM + @intCast(u8, rest); // Is this bugging out if rest is zero?
+        index -= 1;
+
+        // std.debug.print("Casting: {}\n", .{@intCast(u8, rest)});
+        // std.debug.print("Rest: {}\n", .{rest});
+        // std.debug.print("Temp_value: {}\n", .{temp_value});
+    }
+    return &output;
+}
 
 const Camera = struct {
     offset_x: i32,
@@ -286,11 +309,13 @@ pub fn main() !void {
         var FPS: u64 = @floatToInt(u64, 1 / (ticks_diff_div_1000 / 1000));
 
         // std.debug.print("Ticks of frame: {}\n", .{ticks_diff});
-        std.debug.print("FPS: {}\n", .{FPS});
+        // std.debug.print("FPS: {}\n", .{FPS});
         // @Fix: TODO this should be done better
-        var gowno = @intToPtr(u64, FPS);
-        std.debug.print("{}\n", .{gowno});
-        const title_bar_by_frame = TITLE_BAR ++ " "; // ++ @intToPtr(u64, FPS);
+        // var gowno = @intToPtr(u64, FPS);
+        // std.debug.print("{}\n", .{gowno});
+        // const title_bar_by_frame = TITLE_BAR ++ u64ToString(FPS); // ++ @intToPtr(u64, FPS);
+        std.debug.print("stringified u64: {s}\n", .{u64ToString(FPS)});
+        const title_bar_by_frame = TITLE_BAR;
         SDL.SDL_SetWindowTitle(main_window, title_bar_by_frame);
     }
 }
