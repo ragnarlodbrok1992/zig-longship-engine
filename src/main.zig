@@ -48,7 +48,7 @@ pub fn u64ToString(value: u64) []u8 {
         var rest = temp_value % 10;
         temp_value /= 10;
         output[index] = START_OF_ASCII_NUM + @intCast(u8, rest); // Is this bugging out if rest is zero?
-        index -= 1;
+        if (index != 0) index -= 1;
 
         // std.debug.print("Casting: {}\n", .{@intCast(u8, rest)});
         // std.debug.print("Rest: {}\n", .{rest});
@@ -308,14 +308,8 @@ pub fn main() !void {
         var ticks_diff_div_1000: f64 = @intToFloat(f64, ticks_diff);
         var FPS: u64 = @floatToInt(u64, 1 / (ticks_diff_div_1000 / 1000));
 
-        // std.debug.print("Ticks of frame: {}\n", .{ticks_diff});
-        // std.debug.print("FPS: {}\n", .{FPS});
-        // @Fix: TODO this should be done better
-        // var gowno = @intToPtr(u64, FPS);
-        // std.debug.print("{}\n", .{gowno});
-        // const title_bar_by_frame = TITLE_BAR ++ u64ToString(FPS); // ++ @intToPtr(u64, FPS);
-        std.debug.print("stringified u64: {s}\n", .{u64ToString(FPS)});
-        const title_bar_by_frame = TITLE_BAR;
+        // TODO ragnar: fix - value of string must be known at compile time if slicing
+        const title_bar_by_frame = TITLE_BAR ++ u64ToString(FPS);
         SDL.SDL_SetWindowTitle(main_window, title_bar_by_frame);
     }
 }
