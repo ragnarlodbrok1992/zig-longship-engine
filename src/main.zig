@@ -57,6 +57,22 @@ pub fn u64ToString(value: u64) []u8 {
     return &output;
 }
 
+pub fn concatTwoStrings(f: []u8, s: []u8) [1024]u8 {
+    var output: [1024]u8 = undefined;
+    var index_f: u32 = 0;
+    var index_s: u32 = 0;
+    while (index_f < f.len) {
+        output[index_f] = f[index_f];
+        index_f += 1;
+    }
+    while (index_s < s.len) {
+        output[index_f + index_s] = s[index_s];
+        index_s += 1;
+    }
+    output[index_f + index_s] = 0;
+    return output;
+}
+
 const Camera = struct {
     offset_x: i32,
     offset_y: i32,
@@ -309,8 +325,9 @@ pub fn main() !void {
         var FPS: u64 = @floatToInt(u64, 1 / (ticks_diff_div_1000 / 1000));
 
         // TODO ragnar: fix - value of string must be known at compile time if slicing
-        const title_bar_by_frame = TITLE_BAR ++ u64ToString(FPS);
-        SDL.SDL_SetWindowTitle(main_window, title_bar_by_frame);
+        // const title_bar_by_frame = TITLE_BAR ++ u64ToString(FPS);
+        // SDL.SDL_SetWindowTitle(main_window, title_bar_by_frame);
+        SDL.SDL_SetWindowTitle(main_window, concatTwoStrings(TITLE_BAR, u64ToString(FPS)));
     }
 }
 
