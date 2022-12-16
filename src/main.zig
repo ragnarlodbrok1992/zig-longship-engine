@@ -1,7 +1,8 @@
 const std = @import("std");
 const SDL = @import("sdl2"); // Add this package by using sdl.getNativePackage
+// const fmt = std.fmt;
 
-const TITLE_BAR = "Longship Engine - pre-alpha version";
+const TITLE_BAR: [*:0]const u8 = "Longship Engine - pre-alpha version. ";
 const VERSION = 0;
 
 const RES_WIDTH = 800;
@@ -55,22 +56,6 @@ pub fn u64ToString(value: u64) []u8 {
         // std.debug.print("Temp_value: {}\n", .{temp_value});
     }
     return &output;
-}
-
-pub fn concatTwoStrings(f: []u8, s: []u8) [1024]u8 {
-    var output: [1024]u8 = undefined;
-    var index_f: u32 = 0;
-    var index_s: u32 = 0;
-    while (index_f < f.len) {
-        output[index_f] = f[index_f];
-        index_f += 1;
-    }
-    while (index_s < s.len) {
-        output[index_f + index_s] = s[index_s];
-        index_s += 1;
-    }
-    output[index_f + index_s] = 0;
-    return output;
 }
 
 const Camera = struct {
@@ -186,6 +171,23 @@ pub fn mouseClick() void {}
 
 pub fn main() !void {
     std.debug.print("{s}: {}\n", .{ TITLE_BAR, VERSION });
+
+    // Allocate memory for a title bar string and other dynamic one
+    // Title bar string is compose of static const value from comptime
+    // And a calculate frame FPS value from runtime
+    // TODO ragnar: choose an allocator
+    var main_loop_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer main_loop_arena.deinit();
+    const main_loop_arena_allocator = main_loop_arena.allocator();
+
+    // Allocate stuff here
+    const title_bar_memory = try main_loop_arena_allocator.alloc(u8, 128);
+    var title_bar_i: usize = 0;
+    while (TITLE_BAR[title_bar_i] != 0) : (title_bar_i += 1) {
+        title_bar_memory[title_bar_i] = TITLE_BAR[title_bar_i];
+    }
+    title_bar_memory[title_bar_i] = 0; // TODO ragnar: fix this. Null terminating the TITLE BAR string for now.
+    defer main_loop_arena_allocator.free(title_bar_memory);
 
     // Engine variables for controls
     var mouseDraggingEnabled = false;
@@ -323,11 +325,21 @@ pub fn main() !void {
         var ticks_diff: u64 = ticks_end_of_frame - ticks_start_of_frame;
         var ticks_diff_div_1000: f64 = @intToFloat(f64, ticks_diff);
         var FPS: u64 = @floatToInt(u64, 1 / (ticks_diff_div_1000 / 1000));
-
-        // TODO ragnar: fix - value of string must be known at compile time if slicing
-        // const title_bar_by_frame = TITLE_BAR ++ u64ToString(FPS);
-        // SDL.SDL_SetWindowTitle(main_window, title_bar_by_frame);
-        SDL.SDL_SetWindowTitle(main_window, concatTwoStrings(TITLE_BAR, u64ToString(FPS)));
+        var FPS_string = u64ToString(FPS);
+        var char: u8 = 'A';
+        var i: usize = 0;
+        while (char != 0) : (i += 1) {
+            char = FPS_string[i];
+        }
+        var FPS_string_slice = FPS_string[0..i];
+        var k: usize = 0;
+        var j: usize = title_bar_i;
+        while (j < title_bar_i + i) : (j += 1) {
+            title_bar_memory[j] = FPS_string_slice[k];
+            k += 1;
+        }
+        const title_bar_memory_slice = title_bar_memory[0..128];
+        SDL.SDL_SetWindowTitle(main_window, title_bar_memory_slice);
     }
 }
 
