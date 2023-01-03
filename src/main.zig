@@ -12,7 +12,7 @@ const TILE_CAR_WIDTH = 40;
 const TILE_CAR_HEIGHT = 40;
 const TILES_NORTH = 50;
 const TILES_WEST = 50;
-const TILES_COLUMNS = 10;
+const TILES_COLUMNS = 12;
 const TILES_ROWS = 10;
 
 const BLACK = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0x00, .a = 0xFF };
@@ -56,6 +56,28 @@ pub fn u64ToString(value: u64) []u8 {
         // std.debug.print("Temp_value: {}\n", .{temp_value});
     }
     return &output;
+}
+
+pub fn updateTitleBarFPS(ticks_start_frame: u64, ticks_end_frame: u64, title_bar_i: usize, title_bar_memory: []u8, main_window: *SDL.SDL_Window) void {
+    var ticks_diff: u64 = ticks_end_frame - ticks_start_frame;
+    var ticks_diff_div_1000: f64 = @intToFloat(f64, ticks_diff);
+    var FPS: u64 = @floatToInt(u64, 1 / (ticks_diff_div_1000 / 1000));
+    var FPS_string = u64ToString(FPS);
+    var char: u8 = 'A';
+    // TODO ragnar: this concatenation can be moved to another function
+    var i: usize = 0;
+    while (char != 0) : (i += 1) {
+        char = FPS_string[i];
+    }
+    var FPS_string_slice = FPS_string[0..i];
+    var k: usize = 0;
+    var j: usize = title_bar_i;
+    while (j < title_bar_i + i) : (j += 1) {
+        title_bar_memory[j] = FPS_string_slice[k];
+        k += 1;
+    }
+    const title_bar_memory_slice = title_bar_memory[0..128];
+    SDL.SDL_SetWindowTitle(main_window, title_bar_memory_slice);
 }
 
 const Camera = struct {
@@ -170,12 +192,12 @@ pub fn set_render_draw_color(renderer: *SDL.SDL_Renderer, color: SDL.SDL_Color) 
 pub fn mouseClick() void {}
 
 pub fn main() !void {
+    // TODO ragnar: Update title bar only after something like 250 ms
     std.debug.print("{s}: {}\n", .{ TITLE_BAR, VERSION });
 
     // Allocate memory for a title bar string and other dynamic one
     // Title bar string is compose of static const value from comptime
     // And a calculate frame FPS value from runtime
-    // TODO ragnar: choose an allocator
     var main_loop_arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer main_loop_arena.deinit();
     const main_loop_arena_allocator = main_loop_arena.allocator();
@@ -209,12 +231,12 @@ pub fn main() !void {
     defer SDL.TTF_Quit();
 
     // DEBUG lines to render
-    var iso_tiles_matrix: [10][10]IsoTile = undefined;
-    var row: usize = 0;
+    var iso_tiles_matrix: [TILES_ROWS][TILES_COLUMNS]IsoTile = undefined;
+    var column: usize = 0;
 
-    while (row < TILES_ROWS) : (row += 1) {
-        var column: usize = 0;
-        while (column < TILES_COLUMNS) : (column += 1) {
+    while (column < TILES_ROWS) : (column += 1) {
+        var row: usize = 0;
+        while (row < TILES_COLUMNS) : (row += 1) {
             iso_tiles_matrix[column][row] = IsoTile.init_with_sizes(TILES_NORTH + TILE_CAR_HEIGHT * @intCast(i32, row + 1), TILES_WEST + TILE_CAR_WIDTH * @intCast(i32, column + 1), TILE_CAR_WIDTH, TILE_CAR_HEIGHT, MAROON);
         }
     }
@@ -240,6 +262,9 @@ pub fn main() !void {
     // Define mouse state values before loop
     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
     _ = SDL.SDL_GetMouseState(&prevFrameMouseX, &prevFrameMouseY);
+
+    // Control frames for poor man's callback
+    var update_title_bar_ticks: u64 = 0;
 
     mainLoop: while (true) {
         // Beggining of a frame
@@ -323,23 +348,15 @@ pub fn main() !void {
         // End of a frame
         var ticks_end_of_frame: u64 = SDL.SDL_GetTicks64();
         var ticks_diff: u64 = ticks_end_of_frame - ticks_start_of_frame;
-        var ticks_diff_div_1000: f64 = @intToFloat(f64, ticks_diff);
-        var FPS: u64 = @floatToInt(u64, 1 / (ticks_diff_div_1000 / 1000));
-        var FPS_string = u64ToString(FPS);
-        var char: u8 = 'A';
-        var i: usize = 0;
-        while (char != 0) : (i += 1) {
-            char = FPS_string[i];
+        update_title_bar_ticks += ticks_diff;
+
+        // std.debug.print("{}\n", .{ticks_end_of_frame});
+        // Moved to function
+        // TODO ragnar: make SDL call this function every half of second or something
+        if (update_title_bar_ticks > 500) {
+            updateTitleBarFPS(ticks_start_of_frame, ticks_end_of_frame, title_bar_i, title_bar_memory, main_window);
+            update_title_bar_ticks = 0;
         }
-        var FPS_string_slice = FPS_string[0..i];
-        var k: usize = 0;
-        var j: usize = title_bar_i;
-        while (j < title_bar_i + i) : (j += 1) {
-            title_bar_memory[j] = FPS_string_slice[k];
-            k += 1;
-        }
-        const title_bar_memory_slice = title_bar_memory[0..128];
-        SDL.SDL_SetWindowTitle(main_window, title_bar_memory_slice);
     }
 }
 
