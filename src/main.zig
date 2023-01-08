@@ -72,16 +72,40 @@ pub fn updateTitleBarFPS(ticks_start_frame: u64, ticks_end_frame: u64, title_bar
 }
 
 pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) void {
-    _ = angle;
-    // _ = grid;
-    // std.debug.print("Angle: {any}\n\n\n", .{angle});
-    // std.debug.print("Grid: {any}\n\n\n", .{grid});
+    // 1 --> 2 --> N --> x axis
+    // v y axis
 
-    for (grid) |g| {
-        std.debug.print("{any}\n", .{g});
+    var sin = @sin(angle);
+    var cos = @cos(angle);
+    // var minus_sin = (-1) * @sin(angle);
+
+    for (grid) |row| {
+        for (row) |iso_tile| {
+            // std.debug.print("id: {d}\n", .{iso_tile.id});
+            // std.debug.print("isotile: {any}\n\n", .{iso_tile});
+
+            var old_nw_x = iso_tile.nw.x;
+            var old_ne_x = iso_tile.ne.x;
+            var old_se_x = iso_tile.se.x;
+            var old_sw_x = iso_tile.sw.x;
+
+            // TODO ragnar: fix bug - cannot assign to a constant
+            iso_tile.nw.x = @floatToInt(i32, cos * @intToFloat(f64, old_nw_x) - sin * @intToFloat(f64, iso_tile.nw.y));
+            iso_tile.nw.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.nw.y) + sin * @intToFloat(f64, old_nw_x));
+
+            iso_tile.ne.x = @floatToInt(i32, cos * @intToFloat(f64, old_ne_x) - sin * @intToFloat(f64, iso_tile.ne.y));
+            iso_tile.ne.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.ne.y) + sin * @intToFloat(f64, old_ne_x));
+
+            iso_tile.se.x = @floatToInt(i32, cos * @intToFloat(f64, old_se_x) - sin * @intToFloat(f64, iso_tile.se.y));
+            iso_tile.se.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.se.y) + sin * @intToFloat(f64, old_se_x));
+
+            iso_tile.sw.x = @floatToInt(i32, cos * @intToFloat(f64, old_sw_x) - sin * @intToFloat(f64, iso_tile.sw.y));
+            iso_tile.sw.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.sw.y) + sin * @intToFloat(f64, old_sw_x));
+        }
+        // std.debug.print("{any}\n\n\n", .{g});
     }
 
-    // std.process.exit(0);
+    std.process.exit(0);
 }
 
 const Camera = struct {
@@ -122,6 +146,8 @@ const Line = struct {
 };
 
 const IsoTile = struct {
+    id: u64,
+
     nw: Point,
     ne: Point,
     sw: Point,
@@ -135,12 +161,14 @@ const IsoTile = struct {
     color: SDL.SDL_Color,
 
     pub fn init(n: i32, w: i32, s: i32, e: i32, color: SDL.SDL_Color) IsoTile {
-        const nw_point = Point.init(n, w);
-        const ne_point = Point.init(n, e);
-        const sw_point = Point.init(s, w);
-        const se_point = Point.init(s, e);
+        var nw_point = Point.init(n, w);
+        var ne_point = Point.init(n, e);
+        var sw_point = Point.init(s, w);
+        var se_point = Point.init(s, e);
 
         return IsoTile{
+            .id = undefined,
+
             .nw = nw_point,
             .ne = ne_point,
             .sw = sw_point,
@@ -156,12 +184,14 @@ const IsoTile = struct {
     }
 
     pub fn init_with_sizes(n: i32, w: i32, width: i32, height: i32, color: SDL.SDL_Color) IsoTile {
-        const nw_point = Point.init(n, w);
-        const ne_point = Point.init(n, w + width);
-        const sw_point = Point.init(n + height, w);
-        const se_point = Point.init(n + height, w + width);
+        var nw_point = Point.init(n, w);
+        var ne_point = Point.init(n, w + width);
+        var sw_point = Point.init(n + height, w);
+        var se_point = Point.init(n + height, w + width);
 
         return IsoTile{
+            .id = undefined,
+
             .nw = nw_point,
             .ne = ne_point,
             .sw = sw_point,
@@ -236,12 +266,15 @@ pub fn main() !void {
 
     // DEBUG lines to render
     var iso_tiles_matrix: [TILES_ROWS][TILES_COLUMNS]IsoTile = undefined;
+    var id: usize = 0;
     var row: usize = 0;
 
     while (row < TILES_ROWS) : (row += 1) {
         var column: usize = 0;
         while (column < TILES_COLUMNS) : (column += 1) {
             iso_tiles_matrix[row][column] = IsoTile.init_with_sizes(TILES_NORTH + TILE_CAR_HEIGHT * @intCast(i32, column + 1), TILES_WEST + TILE_CAR_WIDTH * @intCast(i32, row + 1), TILE_CAR_WIDTH, TILE_CAR_HEIGHT, MAROON);
+            iso_tiles_matrix[row][column].id = id;
+            id += 1;
         }
     }
 
