@@ -12,8 +12,8 @@ const TILE_CAR_WIDTH = 40;
 const TILE_CAR_HEIGHT = 40;
 const TILES_NORTH = 50;
 const TILES_WEST = 50;
-const TILES_COLUMNS = 12;
-const TILES_ROWS = 10;
+const TILES_COLUMNS = 10;
+const TILES_ROWS = 12;
 
 const BLACK = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0x00, .a = 0xFF };
 const WHITE = SDL.SDL_Color{ .r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xFF };
@@ -37,23 +37,14 @@ const START_OF_ASCII_NUM = 48;
 // Utility functions
 pub fn u64ToString(value: u64) []u8 {
     var temp_value = value;
-
-    // Test
     var MAX_INDEX: u32 = @floatToInt(u32, @log10(@intToFloat(f32, value))) + 1;
-    // std.debug.print("MAX INDEX: {}\n", .{MAX_INDEX});
-
     var output = [_]u8{0} ** 16;
     var index: u32 = MAX_INDEX - 1;
     while (temp_value != 0) {
-        // std.debug.panic("Before modulo division\n", .{});
         var rest = temp_value % 10;
         temp_value /= 10;
         output[index] = START_OF_ASCII_NUM + @intCast(u8, rest); // Is this bugging out if rest is zero?
         if (index != 0) index -= 1;
-
-        // std.debug.print("Casting: {}\n", .{@intCast(u8, rest)});
-        // std.debug.print("Rest: {}\n", .{rest});
-        // std.debug.print("Temp_value: {}\n", .{temp_value});
     }
     return &output;
 }
@@ -78,6 +69,19 @@ pub fn updateTitleBarFPS(ticks_start_frame: u64, ticks_end_frame: u64, title_bar
     }
     const title_bar_memory_slice = title_bar_memory[0..128];
     SDL.SDL_SetWindowTitle(main_window, title_bar_memory_slice);
+}
+
+pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) void {
+    _ = angle;
+    // _ = grid;
+    // std.debug.print("Angle: {any}\n\n\n", .{angle});
+    // std.debug.print("Grid: {any}\n\n\n", .{grid});
+
+    for (grid) |g| {
+        std.debug.print("{any}\n", .{g});
+    }
+
+    // std.process.exit(0);
 }
 
 const Camera = struct {
@@ -232,12 +236,12 @@ pub fn main() !void {
 
     // DEBUG lines to render
     var iso_tiles_matrix: [TILES_ROWS][TILES_COLUMNS]IsoTile = undefined;
-    var column: usize = 0;
+    var row: usize = 0;
 
-    while (column < TILES_ROWS) : (column += 1) {
-        var row: usize = 0;
-        while (row < TILES_COLUMNS) : (row += 1) {
-            iso_tiles_matrix[column][row] = IsoTile.init_with_sizes(TILES_NORTH + TILE_CAR_HEIGHT * @intCast(i32, row + 1), TILES_WEST + TILE_CAR_WIDTH * @intCast(i32, column + 1), TILE_CAR_WIDTH, TILE_CAR_HEIGHT, MAROON);
+    while (row < TILES_ROWS) : (row += 1) {
+        var column: usize = 0;
+        while (column < TILES_COLUMNS) : (column += 1) {
+            iso_tiles_matrix[row][column] = IsoTile.init_with_sizes(TILES_NORTH + TILE_CAR_HEIGHT * @intCast(i32, column + 1), TILES_WEST + TILE_CAR_WIDTH * @intCast(i32, row + 1), TILE_CAR_WIDTH, TILE_CAR_HEIGHT, MAROON);
         }
     }
 
@@ -258,6 +262,16 @@ pub fn main() !void {
     var camera = Camera{ .offset_x = 0, .offset_y = 0 };
     var old_camera_x: i32 = 0;
     var old_camera_y: i32 = 0;
+
+    // Rotate grid
+    var rotate_angle: f64 = 0.0;
+    // var iso_tiles_slice = iso_tiles_matrix[TILES_ROWS - 1][TILES_COLUMNS - 1];
+    // std.debug.print("Before calling initRotateGrid: {any}\n\n\n", .{iso_tiles_matrix});
+    // initRotateGrid(rotate_angle, iso_tiles_slice);
+    // for (iso_tiles_matrix) |it| {
+    //     std.debug.print("{any}\n\n\n", .{it});
+    // }
+    initRotateGrid(rotate_angle, &iso_tiles_matrix);
 
     // Define mouse state values before loop
     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
