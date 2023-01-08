@@ -105,6 +105,11 @@ pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) [TI
             // TODO FIXME ragnar: changing points doesn't change created line
             // TODO ragnar: add function to modify lines with new points
 
+            iso_tile_mut.line_w = Line.init(iso_tile_mut.nw.x, iso_tile_mut.nw.y, iso_tile_mut.sw.x, iso_tile_mut.sw.y);
+            iso_tile_mut.line_n = Line.init(iso_tile_mut.nw.x, iso_tile_mut.nw.y, iso_tile_mut.ne.x, iso_tile_mut.ne.y);
+            iso_tile_mut.line_e = Line.init(iso_tile_mut.ne.x, iso_tile_mut.ne.y, iso_tile_mut.se.x, iso_tile_mut.se.y);
+            iso_tile_mut.line_s = Line.init(iso_tile_mut.se.x, iso_tile_mut.se.y, iso_tile_mut.sw.x, iso_tile_mut.sw.y);
+
             return_grid[row_index][column_index] = iso_tile_mut;
         }
     }
@@ -301,7 +306,7 @@ pub fn main() !void {
     var old_camera_y: i32 = 0;
 
     // Rotate grid
-    var rotate_angle: f64 = 3.14 / 6.0;
+    var rotate_angle: f64 = 3.14 / 4.0;
     // var iso_tiles_slice = iso_tiles_matrix[TILES_ROWS - 1][TILES_COLUMNS - 1];
     // std.debug.print("Before calling initRotateGrid: {any}\n\n\n", .{iso_tiles_matrix});
     // initRotateGrid(rotate_angle, iso_tiles_slice);
