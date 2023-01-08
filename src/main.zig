@@ -71,18 +71,18 @@ pub fn updateTitleBarFPS(ticks_start_frame: u64, ticks_end_frame: u64, title_bar
     SDL.SDL_SetWindowTitle(main_window, title_bar_memory_slice);
 }
 
-pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) void {
+pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) [TILES_ROWS][TILES_COLUMNS]IsoTile {
     // 1 --> 2 --> N --> x axis
     // v y axis
 
+    // var grid_mut = grid;
+    var return_grid: [TILES_ROWS][TILES_COLUMNS]IsoTile = undefined;
     var sin = @sin(angle);
     var cos = @cos(angle);
-    // var minus_sin = (-1) * @sin(angle);
 
-    for (grid) |row| {
-        for (row) |iso_tile| {
-            // std.debug.print("id: {d}\n", .{iso_tile.id});
-            // std.debug.print("isotile: {any}\n\n", .{iso_tile});
+    for (grid) |row, row_index| {
+        for (row) |iso_tile, column_index| {
+            var iso_tile_mut = iso_tile;
 
             var old_nw_x = iso_tile.nw.x;
             var old_ne_x = iso_tile.ne.x;
@@ -90,22 +90,25 @@ pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) voi
             var old_sw_x = iso_tile.sw.x;
 
             // TODO ragnar: fix bug - cannot assign to a constant
-            iso_tile.nw.x = @floatToInt(i32, cos * @intToFloat(f64, old_nw_x) - sin * @intToFloat(f64, iso_tile.nw.y));
-            iso_tile.nw.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.nw.y) + sin * @intToFloat(f64, old_nw_x));
+            iso_tile_mut.nw.x = @floatToInt(i32, cos * @intToFloat(f64, old_nw_x) - sin * @intToFloat(f64, iso_tile_mut.nw.y));
+            iso_tile_mut.nw.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile_mut.nw.y) + sin * @intToFloat(f64, old_nw_x));
 
-            iso_tile.ne.x = @floatToInt(i32, cos * @intToFloat(f64, old_ne_x) - sin * @intToFloat(f64, iso_tile.ne.y));
-            iso_tile.ne.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.ne.y) + sin * @intToFloat(f64, old_ne_x));
+            iso_tile_mut.ne.x = @floatToInt(i32, cos * @intToFloat(f64, old_ne_x) - sin * @intToFloat(f64, iso_tile_mut.ne.y));
+            iso_tile_mut.ne.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile_mut.ne.y) + sin * @intToFloat(f64, old_ne_x));
 
-            iso_tile.se.x = @floatToInt(i32, cos * @intToFloat(f64, old_se_x) - sin * @intToFloat(f64, iso_tile.se.y));
-            iso_tile.se.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.se.y) + sin * @intToFloat(f64, old_se_x));
+            iso_tile_mut.se.x = @floatToInt(i32, cos * @intToFloat(f64, old_se_x) - sin * @intToFloat(f64, iso_tile_mut.se.y));
+            iso_tile_mut.se.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile_mut.se.y) + sin * @intToFloat(f64, old_se_x));
 
-            iso_tile.sw.x = @floatToInt(i32, cos * @intToFloat(f64, old_sw_x) - sin * @intToFloat(f64, iso_tile.sw.y));
-            iso_tile.sw.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile.sw.y) + sin * @intToFloat(f64, old_sw_x));
+            iso_tile_mut.sw.x = @floatToInt(i32, cos * @intToFloat(f64, old_sw_x) - sin * @intToFloat(f64, iso_tile_mut.sw.y));
+            iso_tile_mut.sw.y = @floatToInt(i32, cos * @intToFloat(f64, iso_tile_mut.sw.y) + sin * @intToFloat(f64, old_sw_x));
+
+            // TODO FIXME ragnar: changing points doesn't change created line
+            // TODO ragnar: add function to modify lines with new points
+
+            return_grid[row_index][column_index] = iso_tile_mut;
         }
-        // std.debug.print("{any}\n\n\n", .{g});
     }
-
-    std.process.exit(0);
+    return return_grid;
 }
 
 const Camera = struct {
@@ -213,6 +216,7 @@ pub fn render_line(renderer: *SDL.SDL_Renderer, camera: *Camera, line: Line, col
 }
 
 pub fn render_iso_tile(renderer: *SDL.SDL_Renderer, camera: *Camera, iso_tile: IsoTile) void {
+    // TODO ragnar: why after being rotated it fucking renders the same shit?!
     render_line(renderer, camera, iso_tile.line_w, iso_tile.color);
     render_line(renderer, camera, iso_tile.line_n, iso_tile.color);
     render_line(renderer, camera, iso_tile.line_e, iso_tile.color);
@@ -297,14 +301,18 @@ pub fn main() !void {
     var old_camera_y: i32 = 0;
 
     // Rotate grid
-    var rotate_angle: f64 = 0.0;
+    var rotate_angle: f64 = 3.14 / 6.0;
     // var iso_tiles_slice = iso_tiles_matrix[TILES_ROWS - 1][TILES_COLUMNS - 1];
     // std.debug.print("Before calling initRotateGrid: {any}\n\n\n", .{iso_tiles_matrix});
     // initRotateGrid(rotate_angle, iso_tiles_slice);
     // for (iso_tiles_matrix) |it| {
     //     std.debug.print("{any}\n\n\n", .{it});
     // }
-    initRotateGrid(rotate_angle, &iso_tiles_matrix);
+
+    // FIXME DEBUG
+    std.debug.print("Iso tiles matrix [0][0]: {any}\n\n", .{iso_tiles_matrix[0][0]});
+    var new_iso_tiles_matrix = initRotateGrid(rotate_angle, &iso_tiles_matrix);
+    std.debug.print("Iso tiles matrix [0][0]: {any}\n", .{new_iso_tiles_matrix[0][0]});
 
     // Define mouse state values before loop
     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
@@ -384,7 +392,7 @@ pub fn main() !void {
         _ = SDL.SDL_RenderClear(main_renderer);
 
         // Render isotile
-        for (iso_tiles_matrix) |iso_tile_row| {
+        for (new_iso_tiles_matrix) |iso_tile_row| {
             for (iso_tile_row) |iso_tile| {
                 render_iso_tile(main_renderer, &camera, iso_tile);
             }
