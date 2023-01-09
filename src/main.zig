@@ -8,12 +8,12 @@ const VERSION = 0;
 const RES_WIDTH = 800;
 const RES_HEIGHT = 600;
 
-const TILE_CAR_WIDTH = 40;
-const TILE_CAR_HEIGHT = 40;
+const TILE_CAR_WIDTH = 20;
+const TILE_CAR_HEIGHT = 20;
 const TILES_NORTH = 50;
 const TILES_WEST = 50;
-const TILES_COLUMNS = 10;
-const TILES_ROWS = 12;
+const TILES_COLUMNS = 40;
+const TILES_ROWS = 40;
 
 const BLACK = SDL.SDL_Color{ .r = 0x00, .g = 0x00, .b = 0x00, .a = 0xFF };
 const WHITE = SDL.SDL_Color{ .r = 0xFF, .g = 0xFF, .b = 0xFF, .a = 0xFF };
@@ -114,6 +114,16 @@ pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) [TI
         }
     }
     return return_grid;
+}
+
+// TODO ragnar: tilt the grid to look isometric
+pub fn initTiltGrid(grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) [TILES_ROWS][TILES_COLUMNS]IsoTile {
+    for (grid) |row, row_index| {
+        for (row) |iso_tile, column_index| {
+            // TODO ragnar: do some stuff here
+        }
+    }
+    return grid;
 }
 
 const Camera = struct {
@@ -315,9 +325,10 @@ pub fn main() !void {
     // }
 
     // FIXME DEBUG
-    std.debug.print("Iso tiles matrix [0][0]: {any}\n\n", .{iso_tiles_matrix[0][0]});
-    var new_iso_tiles_matrix = initRotateGrid(rotate_angle, &iso_tiles_matrix);
-    std.debug.print("Iso tiles matrix [0][0]: {any}\n", .{new_iso_tiles_matrix[0][0]});
+    // std.debug.print("Iso tiles matrix [0][0]: {any}\n\n", .{iso_tiles_matrix[0][0]});
+    var new_iso_tiles_rot = initRotateGrid(rotate_angle, &iso_tiles_matrix);
+    var new_iso_tiles_tilted = initTiltGrid(&new_iso_tiles_rot);
+    // std.debug.print("Iso tiles matrix [0][0]: {any}\n", .{new_iso_tiles_matrix[0][0]});
 
     // Define mouse state values before loop
     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
@@ -397,7 +408,7 @@ pub fn main() !void {
         _ = SDL.SDL_RenderClear(main_renderer);
 
         // Render isotile
-        for (new_iso_tiles_matrix) |iso_tile_row| {
+        for (new_iso_tiles_tilted) |iso_tile_row| {
             for (iso_tile_row) |iso_tile| {
                 render_iso_tile(main_renderer, &camera, iso_tile);
             }
