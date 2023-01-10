@@ -118,12 +118,16 @@ pub fn initRotateGrid(angle: f64, grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) [TI
 
 // TODO ragnar: tilt the grid to look isometric
 pub fn initTiltGrid(grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) [TILES_ROWS][TILES_COLUMNS]IsoTile {
+    var return_grid: [TILES_ROWS][TILES_COLUMNS]IsoTile = undefined;
+
     for (grid) |row, row_index| {
         for (row) |iso_tile, column_index| {
             // TODO ragnar: do some stuff here
+            std.debug.print("Tilting grid", .{});
+            std.debug.print("Iso_tile: {any}, row_index: {any}, column_index: {any}\n\n", .{ iso_tile, row_index, column_index });
         }
     }
-    return grid;
+    return return_grid;
 }
 
 const Camera = struct {
@@ -317,18 +321,8 @@ pub fn main() !void {
 
     // Rotate grid
     var rotate_angle: f64 = 3.14 / 4.0;
-    // var iso_tiles_slice = iso_tiles_matrix[TILES_ROWS - 1][TILES_COLUMNS - 1];
-    // std.debug.print("Before calling initRotateGrid: {any}\n\n\n", .{iso_tiles_matrix});
-    // initRotateGrid(rotate_angle, iso_tiles_slice);
-    // for (iso_tiles_matrix) |it| {
-    //     std.debug.print("{any}\n\n\n", .{it});
-    // }
-
-    // FIXME DEBUG
-    // std.debug.print("Iso tiles matrix [0][0]: {any}\n\n", .{iso_tiles_matrix[0][0]});
     var new_iso_tiles_rot = initRotateGrid(rotate_angle, &iso_tiles_matrix);
     var new_iso_tiles_tilted = initTiltGrid(&new_iso_tiles_rot);
-    // std.debug.print("Iso tiles matrix [0][0]: {any}\n", .{new_iso_tiles_matrix[0][0]});
 
     // Define mouse state values before loop
     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
