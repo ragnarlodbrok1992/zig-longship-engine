@@ -328,7 +328,9 @@ pub fn main() !void {
 
     // TTF stuff
     // Font stuff here
+    // TODO moliwa: something has to be done with this, this might be an option
     const Arial: SDL.TTF_Font = SDL.TTF_OpenFont("Arial", 12);
+
     var test_text_surface: SDL.SDL_Surface = SDL.TTF_RenderText_Solid(Arial, "Test text 1234567890 :)", WHITE);
 
     // Converting text surface to texture
@@ -425,8 +427,9 @@ pub fn main() !void {
         text_rect.y = 120;
         text_rect.w = 100;
         text_rect.h = 20;
+        // _ = text_rect;
 
-        SDL.SDL_RenderCopy(main_renderer, test_text_texture, &text_rect);
+        _ = SDL.SDL_RenderCopy(main_renderer, test_text_texture, &text_rect);
 
         SDL.SDL_RenderPresent(main_renderer);
 
