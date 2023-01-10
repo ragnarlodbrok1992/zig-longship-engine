@@ -123,8 +123,11 @@ pub fn initTiltGrid(grid: *[TILES_ROWS][TILES_COLUMNS]IsoTile) [TILES_ROWS][TILE
     for (grid) |row, row_index| {
         for (row) |iso_tile, column_index| {
             // TODO ragnar: do some stuff here
-            std.debug.print("Tilting grid", .{});
-            std.debug.print("Iso_tile: {any}, row_index: {any}, column_index: {any}\n\n", .{ iso_tile, row_index, column_index });
+            // std.debug.print("Tilting grid", .{});
+            // std.debug.print("Iso_tile: {any}, row_index: {any}, column_index: {any}\n\n", .{ iso_tile, row_index, column_index });
+            _ = iso_tile;
+            _ = row_index;
+            _ = column_index;
         }
     }
     return return_grid;
@@ -235,7 +238,6 @@ pub fn render_line(renderer: *SDL.SDL_Renderer, camera: *Camera, line: Line, col
 }
 
 pub fn render_iso_tile(renderer: *SDL.SDL_Renderer, camera: *Camera, iso_tile: IsoTile) void {
-    // TODO ragnar: why after being rotated it fucking renders the same shit?!
     render_line(renderer, camera, iso_tile.line_w, iso_tile.color);
     render_line(renderer, camera, iso_tile.line_n, iso_tile.color);
     render_line(renderer, camera, iso_tile.line_e, iso_tile.color);
@@ -249,7 +251,6 @@ pub fn set_render_draw_color(renderer: *SDL.SDL_Renderer, color: SDL.SDL_Color) 
 pub fn mouseClick() void {}
 
 pub fn main() !void {
-    // TODO ragnar: Update title bar only after something like 250 ms
     std.debug.print("{s}: {}\n", .{ TITLE_BAR, VERSION });
 
     // Allocate memory for a title bar string and other dynamic one
@@ -323,6 +324,15 @@ pub fn main() !void {
     var rotate_angle: f64 = 3.14 / 4.0;
     var new_iso_tiles_rot = initRotateGrid(rotate_angle, &iso_tiles_matrix);
     var new_iso_tiles_tilted = initTiltGrid(&new_iso_tiles_rot);
+    _ = new_iso_tiles_tilted;
+
+    // TTF stuff
+    // Font stuff here
+    const Arial: SDL.TTF_Font = SDL.TTF_OpenFont("Arial", 12);
+    var test_text_surface: SDL.SDL_Surface = SDL.TTF_RenderText_Solid(Arial, "Test text 1234567890 :)", WHITE);
+
+    // Converting text surface to texture
+    var test_text_texture = SDL.SDL_CreateTextureFromSurface(main_renderer, test_text_surface);
 
     // Define mouse state values before loop
     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
@@ -402,11 +412,21 @@ pub fn main() !void {
         _ = SDL.SDL_RenderClear(main_renderer);
 
         // Render isotile
-        for (new_iso_tiles_tilted) |iso_tile_row| {
+        // for (new_iso_tiles_tilted) |iso_tile_row| {
+        for (new_iso_tiles_rot) |iso_tile_row| {
             for (iso_tile_row) |iso_tile| {
                 render_iso_tile(main_renderer, &camera, iso_tile);
             }
         }
+
+        // Render text
+        var text_rect: SDL.SDL_Rect = undefined;
+        text_rect.x = 120;
+        text_rect.y = 120;
+        text_rect.w = 100;
+        text_rect.h = 20;
+
+        SDL.SDL_RenderCopy(main_renderer, test_text_texture, &text_rect);
 
         SDL.SDL_RenderPresent(main_renderer);
 
