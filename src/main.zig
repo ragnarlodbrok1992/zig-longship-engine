@@ -320,21 +320,20 @@ pub fn main() !void {
     var old_camera_x: i32 = 0;
     var old_camera_y: i32 = 0;
 
+    // TTF stuff
+    // Font stuff here
+    // TODO moliwa: something has to be done with this, this might be an option
+    const Arial: *SDL.TTF_Font = SDL.TTF_OpenFont("Arial", 12) orelse @panic("Cannot find font!");
+    var test_text_surface: *SDL.SDL_Surface = SDL.TTF_RenderText_Solid(Arial, "Test text 1234567890 :)", WHITE) orelse @panic("Cannot create test_text_surface!");
+
+    // Converting text surface to texture
+    var test_text_texture = SDL.SDL_CreateTextureFromSurface(main_renderer, test_text_surface);
+
     // Rotate grid
     var rotate_angle: f64 = 3.14 / 4.0;
     var new_iso_tiles_rot = initRotateGrid(rotate_angle, &iso_tiles_matrix);
     var new_iso_tiles_tilted = initTiltGrid(&new_iso_tiles_rot);
     _ = new_iso_tiles_tilted;
-
-    // TTF stuff
-    // Font stuff here
-    // TODO moliwa: something has to be done with this, this might be an option
-    const Arial: SDL.TTF_Font = SDL.TTF_OpenFont("Arial", 12);
-
-    var test_text_surface: SDL.SDL_Surface = SDL.TTF_RenderText_Solid(Arial, "Test text 1234567890 :)", WHITE);
-
-    // Converting text surface to texture
-    var test_text_texture = SDL.SDL_CreateTextureFromSurface(main_renderer, test_text_surface);
 
     // Define mouse state values before loop
     _ = SDL.SDL_GetMouseState(&currFrameMouseX, &currFrameMouseY);
@@ -429,7 +428,7 @@ pub fn main() !void {
         text_rect.h = 20;
         // _ = text_rect;
 
-        _ = SDL.SDL_RenderCopy(main_renderer, test_text_texture, &text_rect);
+        _ = SDL.SDL_RenderCopy(main_renderer, test_text_texture, null, &text_rect);
 
         SDL.SDL_RenderPresent(main_renderer);
 
