@@ -323,7 +323,11 @@ pub fn main() !void {
     // TTF stuff
     // Font stuff here
     // TODO moliwa: something has to be done with this, this might be an option
-    const Arial: *SDL.TTF_Font = SDL.TTF_OpenFont("Arial", 12) orelse @panic("Cannot find font!");
+    std.debug.print("CWD: {s}\n", .{
+        try std.fs.cwd().realpathAlloc(main_loop_arena_allocator, "."),
+    });
+    const Arial: *SDL.TTF_Font = SDL.TTF_OpenFont("Roboto-Regular.ttf", 12) orelse @panic("Cannot find font!");
+    defer SDL.TTF_CloseFont(Arial);
     var test_text_surface: *SDL.SDL_Surface = SDL.TTF_RenderText_Solid(Arial, "Test text 1234567890 :)", WHITE) orelse @panic("Cannot create test_text_surface!");
 
     // Converting text surface to texture
@@ -341,6 +345,13 @@ pub fn main() !void {
 
     // Control frames for poor man's callback
     var update_title_bar_ticks: u64 = 0;
+
+    // Render text
+    var text_rect: SDL.SDL_Rect = undefined;
+    text_rect.x = 120;
+    text_rect.y = 120;
+    text_rect.w = 100;
+    text_rect.h = 20;
 
     mainLoop: while (true) {
         // Beggining of a frame
@@ -419,14 +430,6 @@ pub fn main() !void {
                 render_iso_tile(main_renderer, &camera, iso_tile);
             }
         }
-
-        // Render text
-        var text_rect: SDL.SDL_Rect = undefined;
-        text_rect.x = 120;
-        text_rect.y = 120;
-        text_rect.w = 100;
-        text_rect.h = 20;
-        // _ = text_rect;
 
         _ = SDL.SDL_RenderCopy(main_renderer, test_text_texture, null, &text_rect);
 
